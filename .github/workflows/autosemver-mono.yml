@@ -1,0 +1,89 @@
+
+name: Auto SemVer on Main-Mono
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        required: false
+        type: string
+      build_dirs:
+        required: false
+        type: string
+      os_arch:
+        required: false
+        type: string
+      publish:
+        required: false
+        type: boolean
+      regulated:
+        required: false
+        type: boolean
+    secrets:
+      ARTIFACTORY_USER:
+        required: true
+      ARTIFACTORY_TOKEN:
+        required: true
+      acres_gh_actions_token:
+        required: true
+
+jobs:
+  autosemver:
+    name: Auto SemVer on Main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+      - uses: docker/login-action@v2
+        with:
+          registry: acrestech.jfrog.io/artifactory
+          username: ${{ secrets.ARTIFACTORY_USER }}
+          password: ${{ secrets.ARTIFACTORY_TOKEN }} 
+      - run: sh ./scripts/semver.sh
+      
+      #- run: ./.ops-harness/scripts/autosemver-docker-build || exit 1
+      #  env:
+      #    APP_NAME: ${{ env.APP_NAME }}
+      #    OSARCH: ${{ env.OSARCH }}
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #    ARTIFACTORY_URL: https://acrestech.jfrog.io
+      #    ARTIFACTORY_USER: ${{ secrets.ARTIFACTORY_USER }}
+      #    ARTIFACTORY_TOKEN: ${{ secrets.ARTIFACTORY_TOKEN }}
+
+  release:
+    name: Release Auto SemVer
+    needs: autosemver
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Deployment Manifest
+        if: ${{ needs.autosemver.outputs.version }}
+        uses: actions/checkout@v3
+        with:
+          repository: acres4/nex7-deployment
+          ref: unstable
+          token: ${{ secrets.acres_gh_actions_token }}
+      - name: Publish version to manifest
+        if: ${{ needs.autosemver.outputs.app_name }}
+        run: |
+          APP_NAME=${{ env.APP_NAME }}
+          VERSION=${{ needs.autosemver.outputs.version }}
+          sed -i "s+$APP_NAME:.*+$APP_NAME: $VERSION+g" release.yaml
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add -A
+          git diff-index --quiet HEAD || git commit -m "chore: set $APP_NAME to $VERSION"
+          git push origin unstable
+
+    #secrets:
+      #ARTIFACTORY_USER: ${{ secrets.ARTIFACTORY_USER }}
+      #ARTIFACTORY_TOKEN: ${{ secrets.ARTIFACTORY_TOKEN }}
+      #acres_gh_actions_token: ${{ secrets.acres_gh_actions_token }}
+  #call-reusaable-build:
+    #uses: acres4/workflows/.github/workflows/reusable.yml@main
+    #with:
+      #app_name: "first-floor"
+      #build_dirs: "mtls,tito-plus,player-manager,device-manager,bonus/mystery,transforms/meter-processor,transforms/game-processor,bonus/djt-controller"
+      #os_arch: "linux/amd64"
+      #publish: true
+      #regulated: true
+
+

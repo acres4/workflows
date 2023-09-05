@@ -40,9 +40,9 @@ jobs:
       # GitHub Actions do not automatically checkout your projects. If you need the code
       # you need to check it out.
       - name: Checkout Source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checkout Ops Harness
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: acres4/ops-harness
           ref: main
@@ -74,7 +74,7 @@ jobs:
     steps:
       - name: Checkout Deployment Manifest
         if: ${{ needs.build.outputs.version }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: acres4/nex7-deployment
           ref: unstable

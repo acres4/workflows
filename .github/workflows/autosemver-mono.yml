@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - uses: docker/login-action@v2
         with:
           registry: acrestech.jfrog.io/artifactory
@@ -56,7 +56,7 @@ jobs:
     steps:
       - name: Checkout Deployment Manifest
         if: ${{ needs.autosemver.outputs.version }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: acres4/nex7-deployment
           ref: unstable

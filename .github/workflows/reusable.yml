@@ -48,7 +48,7 @@ jobs:
           ref: main
           path: .ops-harness
           token: ${{ secrets.acres_gh_actions_token }}
-      - uses: docker/login-action@v2
+      - uses: docker/login-action@v3
         with:
           registry: acrestech.jfrog.io/artifactory
           username: ${{ secrets.ARTIFACTORY_USER }}
